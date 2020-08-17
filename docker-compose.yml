@@ -1,0 +1,16 @@
+version: "3"
+services:
+  web_flask:
+    build:
+      context: .
+      args:
+        project_directory: "/projects/"
+    ports:
+      - "5000:5000"
+    volumes:
+      - "./src:/projects"
+    environment:
+      TZ: "Asia/Tokyo"
+      FLASK_ENV: "development"
+    tty: true
+    command: "cd src && pipenv install"
