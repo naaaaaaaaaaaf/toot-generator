@@ -3,14 +3,16 @@ services:
   web_flask:
     build:
       context: .
-      args:
-        project_directory: "/projects/"
     ports:
       - "5000:5000"
     volumes:
-      - "./src:/projects"
+      - "./src:/scripts"
     environment:
       TZ: "Asia/Tokyo"
       FLASK_ENV: "development"
     tty: true
-    command: "cd src && pipenv install"
+    command: >
+      /bin/bash -c "
+      cd /scripts &&
+      pipenv install --system &&
+      flask run --host 0.0.0.0 --port 5000"
