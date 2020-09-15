@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>top</title>
+</head>
+<body>
+	<h1>Mastodonにログイン</h1>
+	1. 以下のリンクからMastodonにログインしてください。<br>
+	<a href="{{ url }}">Mastodonにログイン</a><br>
+	2. 以下のフォームに認証コードを入力してください。<br>
+	<form action="/auth" method="POST" enctype="multipart/form-data">
+		<input type="text" id="code" name="code" placeholder="認証コード" required>
+		<input class="submit-button" value="実行する" type="submit">
+	</form>
+</body>
+</html>
