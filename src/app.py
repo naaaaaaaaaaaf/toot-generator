@@ -5,25 +5,28 @@ from urllib.parse import urlencode
 
 app = Flask(__name__)
 
+
 @app.route('/')
 def hello_world():
     return render_template('index.html')
 
+
 @app.route('/redirect', methods=['POST'])
 def get_auth_url():
-    #todo ドメインチェック
-    #インスタンスにAPP登録
+    # todo ドメインチェック
+    # インスタンスにAPP登録
     global client_id, client_secret, domain
     domain = request.form['domain']
     client_id, client_secret = get_client_id(domain)
-    url = get_authorize_url(domain,client_id)
-    return render_template('getToken.html',url = url)
-    #return "param1:{}".format(url) 
+    url = get_authorize_url(domain, client_id)
+    return render_template('getToken.html', url=url)
+    # return "param1:{}".format(url)
+
 
 @app.route('/auth', methods=['POST'])
 def get_auth():
     code = request.form['code']
-    access_token = get_access_token(domain,client_id,client_secret,code)
+    access_token = get_access_token(domain, client_id, client_secret, code)
     return access_token
 
 
@@ -34,7 +37,7 @@ def get_client_id(domain):
     """
 
     # すでに作成ずみで保存してあればそれを利用
-    #if os.path.exists(STORE_FILE_NAME):
+    # if os.path.exists(STORE_FILE_NAME):
     #    with open(STORE_FILE_NAME) as f:
     #        store = json.load(f)
     #        return store["client_id"], store["client_secret"]
@@ -47,11 +50,12 @@ def get_client_id(domain):
                              scopes="read")).json()
 
     # ファイルに保存
-    #with open(STORE_FILE_NAME, "w") as f:
+    # with open(STORE_FILE_NAME, "w") as f:
     #    json.dump(res, f)
     return res["client_id"], res["client_secret"]
 
-def get_authorize_url(domain,client_id):
+
+def get_authorize_url(domain, client_id):
     """
     認証済みアプリに権限を与えるための承認ページのURLを作成する
     :param domain:
@@ -65,7 +69,8 @@ def get_authorize_url(domain,client_id):
         scope="read"
     ))
 
-    return 'https://' + domain + '/oauth/authorize?'+params
+    return 'https://' + domain + '/oauth/authorize?' + params
+
 
 def get_access_token(domain, client_id, client_secret, code):
     """
@@ -76,7 +81,7 @@ def get_access_token(domain, client_id, client_secret, code):
     :param code: ブラウザに表示された認証コード
     :return: access_token
     """
-    res = requests.post('https://'+ domain +'/oauth/token', dict(
+    res = requests.post('https://' + domain + '/oauth/token', dict(
         grant_type="authorization_code",
         redirect_uri="urn:ietf:wg:oauth:2.0:oob",
         client_id=client_id,
