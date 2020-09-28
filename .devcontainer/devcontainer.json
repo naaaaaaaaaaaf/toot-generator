@@ -21,8 +21,9 @@
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
-		"terminal.integrated.shell.linux": null,
-		"python.linting.pylintEnabled": false,
+		"terminal.integrated.shell.linux": "/bin/bash",
+        "python.pythonPath": "/usr/local/bin/python",
+        "python.linting.pylintEnabled": false,
         "python.linting.flake8Enabled": true,
         "python.linting.flake8Args": [
             "--ignore=E402,E501"
@@ -41,7 +42,8 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-python.python"
+		"ms-python.python",
+		"ms-pyright.pyright"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
