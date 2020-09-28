@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
-from flask import Flask, request, render_template
+import os
+import sys
+import datetime
+import markovify
+from flask import Flask, request, redirect, abort, jsonify, render_template
+import urllib.parse
+import MeCab
 import requests
+#import exportModel
 from urllib.parse import urlencode
 
 app = Flask(__name__)
@@ -25,9 +32,30 @@ def get_auth_url():
 
 @app.route('/auth', methods=['POST'])
 def get_auth():
+    successMsg = None
+    errMsg = None
     code = request.form['code']
-    access_token = get_access_token(domain, client_id, client_secret, code)
-    return access_token
+    try:
+        access_token = get_access_token(domain, client_id, client_secret, code)
+        # get account info
+        account_info = get_account_info(domain, access_token)
+        params = {"screen_name": account_info["screen_name"], "trim_user": 1}
+        filepath = os.path.join("./chainfiles", os.path.basename(account_info["screen_name"].lower()) + ".json")
+        # if (os.path.isfile(filepath) and datetime.datetime.now().timestamp() - os.path.getmtime(filepath) < 60 * 60 * 24):
+        #    errMsg = "You can generate Markov chain only once per 24 hours."
+        # else:
+        #    exportModel.generateAndExport(exportModel.loadTwitterAPI(twt, params), filepath)
+        #    successMsg = account_info["screen_name"] + "'s Markov chain model was successfully GENERATED!"
+        #    print("LOG,GENMODEL," + str(datetime.datetime.now()) + "," + account_info["screen_name"].lower())   # Log
+    except Exception as e:
+        print(e)
+        #errMsg = "Failed to generate your Markov chain. Please retry a few minutes later."
+
+    return account_info
+    # if successMsg:
+    #    return redirect("https://markov.cordx.net/" + account_info["screen_name"] + "?success=" + urllib.parse.quote(successMsg))
+    # else:
+    #    return redirect("https://markov.cordx.net/?error=" + urllib.parse.quote(errMsg))
 
 
 def get_client_id(domain):
@@ -90,3 +118,9 @@ def get_access_token(domain, client_id, client_secret, code):
     )).json()
 
     return res["access_token"]
+
+
+def get_account_info(domain, access_token):
+    headers = {'Authorization': 'Bearer {}'.format(access_token)}
+    res = requests.get('https://' + domain + '/api/v1/accounts/verify_credentials', headers=headers).json()
+    return res
