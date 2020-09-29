@@ -7,4 +7,4 @@ RUN cd ./mecab-ipadic-neologd && ./bin/install-mecab-ipadic-neologd -y -p /var/l
 RUN rm -rf ./mecab-ipadic-neologd
 RUN ln -s /var/lib/mecab/dic /usr/lib/mecab/dic
 
-RUN pip install pipenv autopep8 flake8
+RUN pip install pipenv

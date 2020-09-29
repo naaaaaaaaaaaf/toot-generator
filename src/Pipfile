@@ -10,6 +10,9 @@ flake8 = "*"
 [packages]
 requests = "*"
 pandas = "*"
-mecab-python3 = "*"
 markovify = "*"
 flask = "*"
+mecab-python3 = "==0.996.5"
+
+[requires]
+python_version = "3.8"
