@@ -4,11 +4,9 @@ import sys
 import datetime
 import markovify
 from flask import Flask, request, redirect, abort, jsonify, render_template
-import urllib.parse
 import MeCab
-import requests
-#import exportModel
-from urllib.parse import urlencode
+import exportModel
+import mastodonTools
 
 app = Flask(__name__)
 
@@ -24,103 +22,34 @@ def get_auth_url():
     # インスタンスにAPP登録
     global client_id, client_secret, domain
     domain = request.form['domain']
-    client_id, client_secret = get_client_id(domain)
-    url = get_authorize_url(domain, client_id)
+    client_id, client_secret = mastodonTools.get_client_id(domain)
+    url = mastodonTools.get_authorize_url(domain, client_id)
     return render_template('getToken.html', url=url)
     # return "param1:{}".format(url)
 
 
 @app.route('/auth', methods=['POST'])
 def get_auth():
-    successMsg = None
-    errMsg = None
     code = request.form['code']
     try:
-        access_token = get_access_token(domain, client_id, client_secret, code)
+        access_token = mastodonTools.get_access_token(domain, client_id, client_secret, code)
         # get account info
-        account_info = get_account_info(domain, access_token)
-        params = {"screen_name": account_info["screen_name"], "trim_user": 1}
-        filepath = os.path.join("./chainfiles", os.path.basename(account_info["screen_name"].lower()) + ".json")
-        # if (os.path.isfile(filepath) and datetime.datetime.now().timestamp() - os.path.getmtime(filepath) < 60 * 60 * 24):
-        #    errMsg = "You can generate Markov chain only once per 24 hours."
-        # else:
-        #    exportModel.generateAndExport(exportModel.loadTwitterAPI(twt, params), filepath)
-        #    successMsg = account_info["screen_name"] + "'s Markov chain model was successfully GENERATED!"
-        #    print("LOG,GENMODEL," + str(datetime.datetime.now()) + "," + account_info["screen_name"].lower())   # Log
+        account_info = mastodonTools.get_account_info(domain, access_token)
+        params = {"exclude_replies": 1, "exclude_reblogs": 1}
+        filename = "{}@{}".format(account_info["username"], domain)
+        filepath = os.path.join("./chainfiles", os.path.basename(filename.lower()) + ".json")
+        if (os.path.isfile(filepath) and datetime.datetime.now().timestamp() - os.path.getmtime(filepath) < 60 * 60 * 24):
+            Msg = "You can generate Markov chain only once per 24 hours."
+        else:
+            exportModel.generateAndExport(exportModel.loadMastodonAPI(domain, access_token, account_info['id'], params), filepath)
+            Msg = account_info["username"] + "'s Markov chain model was successfully GENERATED!"
+            print("LOG,GENMODEL," + str(datetime.datetime.now()) + "," + account_info["username"].lower())   # Log
     except Exception as e:
         print(e)
-        #errMsg = "Failed to generate your Markov chain. Please retry a few minutes later."
+        Msg = "Failed to generate your Markov chain. Please retry a few minutes later."
 
-    return account_info
+    return render_template('modelResult.html', message=Msg)
     # if successMsg:
     #    return redirect("https://markov.cordx.net/" + account_info["screen_name"] + "?success=" + urllib.parse.quote(successMsg))
     # else:
     #    return redirect("https://markov.cordx.net/?error=" + urllib.parse.quote(errMsg))
-
-
-def get_client_id(domain):
-    """
-    認証済みアプリのためのclient_id, client_secretの発行
-    :return: (client_id, client_secret)
-    """
-
-    # すでに作成ずみで保存してあればそれを利用
-    # if os.path.exists(STORE_FILE_NAME):
-    #    with open(STORE_FILE_NAME) as f:
-    #        store = json.load(f)
-    #        return store["client_id"], store["client_secret"]
-
-    # 未作成であれば新規に発行
-    request_uri = 'https://' + domain + '/api/v1/apps'
-    res = requests.post(request_uri,
-                        dict(client_name="Toot Generator",
-                             redirect_uris="urn:ietf:wg:oauth:2.0:oob",
-                             scopes="read")).json()
-
-    # ファイルに保存
-    # with open(STORE_FILE_NAME, "w") as f:
-    #    json.dump(res, f)
-    return res["client_id"], res["client_secret"]
-
-
-def get_authorize_url(domain, client_id):
-    """
-    認証済みアプリに権限を与えるための承認ページのURLを作成する
-    :param domain:
-    :param client_id:
-    :return: url
-    """
-    params = urlencode(dict(
-        client_id=client_id,
-        response_type="code",
-        redirect_uri="urn:ietf:wg:oauth:2.0:oob",   # ブラウザ上にcode表示
-        scope="read"
-    ))
-
-    return 'https://' + domain + '/oauth/authorize?' + params
-
-
-def get_access_token(domain, client_id, client_secret, code):
-    """
-    client_idと認証コードを利用してアクセストークンを取得する
-    :param domain:
-    :param client_id:
-    :param client_secret:
-    :param code: ブラウザに表示された認証コード
-    :return: access_token
-    """
-    res = requests.post('https://' + domain + '/oauth/token', dict(
-        grant_type="authorization_code",
-        redirect_uri="urn:ietf:wg:oauth:2.0:oob",
-        client_id=client_id,
-        client_secret=client_secret,
-        code=code
-    )).json()
-
-    return res["access_token"]
-
-
-def get_account_info(domain, access_token):
-    headers = {'Authorization': 'Bearer {}'.format(access_token)}
-    res = requests.get('https://' + domain + '/api/v1/accounts/verify_credentials', headers=headers).json()
-    return res
