@@ -4,7 +4,6 @@ import sys
 import datetime
 import markovify
 from flask import Flask, request, redirect, abort, jsonify, render_template
-import MeCab
 import exportModel
 import mastodonTools
 import json
@@ -61,7 +60,20 @@ def get_auth():
         Msg = "Failed to generate your Markov chain. Please retry a few minutes later."
 
     return render_template('modelResult.html', message=Msg)
-    # if successMsg:
-    #    return redirect("https://markov.cordx.net/" + account_info["screen_name"] + "?success=" + urllib.parse.quote(successMsg))
-    # else:
-    #    return redirect("https://markov.cordx.net/?error=" + urllib.parse.quote(errMsg))
+
+# main api
+
+
+@app.route('/genText/<instance>@<username>', methods=['GET'])
+def genText(instance, username):
+    if not os.path.isfile("./chainfiles/{}@{}.json".format(username, instance)):
+        return jsonify({"status": False, "message": "Learned model file not found. まずはじめに投稿を学習させてください。"}), 404
+    try:
+        with open("./chainfiles/{}@{}.json".format(username, instance)) as f:
+            textModel = markovify.Text.from_json(f.read())
+        sentence = textModel.make_sentence(tries=100)
+        sentence = "".join(sentence.split())
+        return jsonify({"status": False, "message": sentence}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"status": False, "message": "Unknown error."}), 500
