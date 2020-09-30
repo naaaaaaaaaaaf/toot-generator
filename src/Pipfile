@@ -13,6 +13,7 @@ pandas = "*"
 markovify = "*"
 flask = "*"
 mecab-python3 = "==0.996.5"
+flask-wtf = "*"
 
 [requires]
 python_version = "3.8"
