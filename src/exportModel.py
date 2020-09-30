@@ -36,9 +36,9 @@ def loadTwitterJS(filepath):
 
 
 def loadMastodonAPI(domain, access_token, account_id, params):
-    tweets = mastodonTools.fetchTootsLoop(domain, access_token, account_id, params, 100)
-    text = [s["text"] for s in tweets if "retweeted_status" not in s]
-    return "\n".join(filterTweets(text))
+    toots = mastodonTools.fetchTootsLoop(domain, access_token, account_id, params, 100)
+    #text = [s["text"] for s in tweets if "retweeted_status" not in s]
+    return "\n".join(filterTweets(toots))
 
 
 def generateAndExport(src, dest, state_size=3):

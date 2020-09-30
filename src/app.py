@@ -7,6 +7,7 @@ from flask import Flask, request, redirect, abort, jsonify, render_template
 import MeCab
 import exportModel
 import mastodonTools
+import json
 
 app = Flask(__name__)
 
@@ -22,10 +23,21 @@ def get_auth_url():
     # インスタンスにAPP登録
     global client_id, client_secret, domain
     domain = request.form['domain']
-    client_id, client_secret = mastodonTools.get_client_id(domain)
+    filepath = os.path.join("./tokens", os.path.basename(domain.lower()) + ".json")
+    if (os.path.isfile(filepath)):
+        with open(filepath) as f:
+            store = json.load(f)
+            client_id, client_secret = store['client_id'], store['client_secret']
+    else:
+        client_id, client_secret = mastodonTools.get_client_id(domain)
+        token_dic = {}
+        token_dic['client_id'] = client_id
+        token_dic['client_secret'] = client_secret
+        with open(filepath, "w") as f:
+            json.dump(token_dic, f)
+
     url = mastodonTools.get_authorize_url(domain, client_id)
     return render_template('getToken.html', url=url)
-    # return "param1:{}".format(url)
 
 
 @app.route('/auth', methods=['POST'])
