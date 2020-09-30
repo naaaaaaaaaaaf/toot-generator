@@ -7,9 +7,10 @@
 </head>
 <body>
 	<h1>Mastodonにログイン</h1>
-	<form action="/redirect" method="POST" enctype="multipart/form-data">
-		<input type="text" id="domain" name="domain" placeholder="ドメイン" required>
-		<input class="submit-button" value="実行する" type="submit">
+	<form method="POST" action="/">
+		{{ form.csrf_token }}
+		{{ form.domain.label }} {{ form.domain(size=20) }}
+		<input type="submit" value="Go">
 	</form>
 </body>
 </html>
