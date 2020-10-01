@@ -8,3 +8,7 @@ class DomainForm(FlaskForm):
 
 class TokenForm(FlaskForm):
     token = StringField('コード:', validators=[DataRequired()])
+
+class GenForm(FlaskForm):
+    domain = StringField('ドメイン:', validators=[DataRequired()])
+    username = StringField('ユーザー名:', validators=[DataRequired()])

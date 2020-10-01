@@ -15,6 +15,10 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 @app.route('/',methods=["GET", "POST"])
 def index():
+    return render_template('index.html')
+
+@app.route('/login',methods=["GET", "POST"])
+def login_mastodon():
     form = Form.DomainForm()
     if request.method == 'POST' and form.validate_on_submit():
         global client_id, client_secret, domain
@@ -31,12 +35,12 @@ def index():
                 token_dic['client_id'] = client_id
                 token_dic['client_secret'] = client_secret
                 with open(filepath, "w") as f:
-                    json.dump(token_dic, f)
-                return redirect(url_for('get_Token'))
+                    json.dump(token_dic, f)                
             except Exception as e:
                 Msg = "Mastodon認証に失敗しました。"
                 return render_template('modelResult.html', message=Msg)
-    return render_template('index.html',form=form)
+        return redirect(url_for('get_Token'))
+    return render_template('login.html',form=form)
 
 @app.route('/getToken', methods=['GET','POST'])
 def get_Token():
@@ -44,7 +48,7 @@ def get_Token():
         url = mastodonTools.get_authorize_url(domain, client_id)
     except Exception as e:
         Msg = "Mastodon認証に失敗しました。"
-        return render_template('modelResult.html', message=Msg)
+        return render_template('getToken.html', message=Msg)
     form = Form.TokenForm()
     if request.method == 'POST' and form.validate_on_submit():
         code = request.form['token']
@@ -72,16 +76,22 @@ def get_Token():
 # main api
 
 
-@app.route('/genText/<instance>@<username>', methods=['GET'])
-def genText(instance, username):
-    if not os.path.isfile("./chainfiles/{}@{}.json".format(username, instance)):
-        return jsonify({"status": False, "message": "Learned model file not found. まずはじめに投稿を学習させてください。"}), 404
-    try:
-        with open("./chainfiles/{}@{}.json".format(username, instance)) as f:
-            textModel = markovify.Text.from_json(f.read())
-        sentence = textModel.make_sentence(tries=100)
-        sentence = "".join(sentence.split())
-        return jsonify({"status": False, "message": sentence}), 200
-    except Exception as e:
-        print(e)
-        return jsonify({"status": False, "message": "Unknown error."}), 500
+@app.route('/genText', methods=['POST','GET'])
+def genText():
+    form = Form.GenForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        username = request.form['username']
+        instance = request.form['domain']
+
+        if not os.path.isfile("./chainfiles/{}@{}.json".format(username, instance)):
+            render_template('GenText.html', message='まずトゥートの学習をさせてね',form=form)
+        try:
+            with open("./chainfiles/{}@{}.json".format(username, instance)) as f:
+                textModel = markovify.Text.from_json(f.read())
+                sentence = textModel.make_sentence(tries=100)
+                sentence = "".join(sentence.split())
+            return render_template('GenText.html', result=sentence,form=form)
+        except Exception as e:
+            print(e)
+            return render_template('GenText.html', message='something error happend', form=form)
+    return render_template('GenText.html', form=form)
