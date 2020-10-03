@@ -7,9 +7,15 @@
 </head>
 <body>
 	<h1>Toot Generator</h1>
+	{{ message }}
+	{{ result }}
+	<h1>トゥートを生成</h1>
+	<form method="POST" action="/genText">
+		{{ form.csrf_token }}
+        {{ form.domain.label }} {{ form.domain(size=20) }}
+        {{ form.username.label }} {{ form.username(size=20) }}
+		<input type="submit" value="Go">
 	<h2>投稿の学習が終わってない場合</h2>
 	<a href="login">Mastodonにログインして学習させる</a>
-	<h2>既に終わっている場合</h2>
-	<a href="genText">Mastodonにログインして学習させる</a>
 </body>
 </html>

@@ -5,7 +5,7 @@ from os import access
 import requests
 from urllib.parse import urlencode
 
-
+redirect_uri = ''
 def get_client_id(domain):
     """
     認証済みアプリのためのclient_id, client_secretの発行
@@ -22,7 +22,7 @@ def get_client_id(domain):
     request_uri = 'https://' + domain + '/api/v1/apps'
     res = requests.post(request_uri,
                         dict(client_name="Toot Generator",
-                             redirect_uris="urn:ietf:wg:oauth:2.0:oob",
+                             redirect_uris=redirect_uri,
                              scopes="read")).json()
 
     # ファイルに保存
@@ -41,7 +41,7 @@ def get_authorize_url(domain, client_id):
     params = urlencode(dict(
         client_id=client_id,
         response_type="code",
-        redirect_uri="urn:ietf:wg:oauth:2.0:oob",   # ブラウザ上にcode表示
+        redirect_uri=redirect_uri,   # ブラウザ上にcode表示
         scope="read"
     ))
 
@@ -59,7 +59,7 @@ def get_access_token(domain, client_id, client_secret, code):
     """
     res = requests.post('https://' + domain + '/oauth/token', dict(
         grant_type="authorization_code",
-        redirect_uri="urn:ietf:wg:oauth:2.0:oob",
+        redirect_uri=redirect_uri,
         client_id=client_id,
         client_secret=client_secret,
         code=code
